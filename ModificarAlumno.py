@@ -1,10 +1,18 @@
 import boto3
+import json
 
 def lambda_handler(event, context):
+    # Si API Gateway envía el body como string
+    if 'body' in event:
+        body = json.loads(event['body'])
+    else:
+        body = event
+
     # Entrada (json)
-    tenant_id = event['tenant_id']
-    alumno_id = event['alumno_id']
-    alumno_datos = event['alumno_datos']
+    tenant_id = body['tenant_id']
+    alumno_id = body['alumno_id']
+    alumno_datos = body['alumno_datos']
+
     # Proceso
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table('t_alumnos')
@@ -13,14 +21,16 @@ def lambda_handler(event, context):
             'tenant_id': tenant_id,
             'alumno_id': alumno_id
         },
-        UpdateExpression="set alumno_datos=:alumno_datos",
+        UpdateExpression="set alumno_datos = :alumno_datos",
         ExpressionAttributeValues={
             ':alumno_datos': alumno_datos
         },
         ReturnValues="UPDATED_NEW"
     )
-    # Salida (json)
+
+    # Salida
     return {
         'statusCode': 200,
         'response': response
     }
+
